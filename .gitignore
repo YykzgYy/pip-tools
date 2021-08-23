@@ -31,3 +31,4 @@ coverage.xml
 requirements.in
 requirements.txt
 .eggs/
+.vscode/launch.json
