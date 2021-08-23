@@ -11,6 +11,7 @@ from pip._internal.req.req_tracker import update_env_context_manager
 from piptools.cache import DependencyCache
 from piptools.repositories.base import BaseRepository
 
+from ._compat import contextlib
 from .logging import log
 from .utils import (
     UNSAFE_PACKAGES,
@@ -139,15 +140,26 @@ class Resolver:
         )
 
     def resolve_hashes(
-        self, ireqs: Set[InstallRequirement]
+        self, ireqs: Set[InstallRequirement], single_hash: bool
     ) -> Dict[InstallRequirement, Set[str]]:
         """
         Finds acceptable hashes for all of the given InstallRequirements.
+
+        If single_hash is True, the set for each given  requirement will only have the hash for the
+        best match file to install based on the current execution environment. When False, hashes
+        for all release files wil included for a given requirement.
         """
         log.debug("")
         log.debug("Generating hashes:")
-        with self.repository.allow_all_wheels(), log.indentation():
-            return {ireq: self.repository.get_hashes(ireq) for ireq in ireqs}
+        allow_all_wheels = (
+            contextlib.nullcontext(None)
+            if single_hash
+            else self.repository.allow_all_wheels()
+        )
+        with allow_all_wheels, log.indentation():
+            return {
+                ireq: self.repository.get_hashes(ireq, single_hash) for ireq in ireqs
+            }
 
     def resolve(self, max_rounds: int = 10) -> Set[InstallRequirement]:
         """
