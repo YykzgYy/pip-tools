@@ -177,7 +177,7 @@ def _get_default_option(option_name: str) -> Any:
 @click.option(
     "--reuse-hashes/--no-reuse-hashes",
     is_flag=True,
-    default=True,
+    default=False,
     help=(
         "Improve the speed of --generate-hashes by reusing the hashes from an "
         "existing output file."
